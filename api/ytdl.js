@@ -27,7 +27,10 @@ module.exports = async (req, res) => {
       if (!data) return;
 
       if (typeof data === 'string') {
-        if (data.startsWith('http')) urls.push(data);
+        // ✅ ONLY YTDOWN URL
+        if (data.includes('YTDown.com')) {
+          urls.push(data);
+        }
         return;
       }
 
