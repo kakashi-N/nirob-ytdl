@@ -48,6 +48,7 @@ module.exports = async (req, res) => {
 
     return res.status(200).json({
       status: 'success',
+      author: 'NIROB.TOP',
       total: urls.length,
       urls
     });
@@ -57,6 +58,7 @@ module.exports = async (req, res) => {
 
     return res.status(500).json({
       status: 'error',
+      author: 'NIROB.TOP',
       message: 'Serverless function crashed',
       error: err.message
     });
