@@ -1,57 +1,61 @@
 const axios = require('axios');
 
 module.exports = async (req, res) => {
-  const { url } = req.query;
-
-  if (!url) {
-    return res.status(400).json({
-      status: 'error',
-      message: 'Missing url parameter'
-    });
-  }
-
   try {
+    const url = req.query.url;
+
+    if (!url) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Missing url parameter'
+      });
+    }
+
     const response = await axios.get('https://nirob.top/dl', {
-      params: {
-        url: url
-      },
+      params: { url },
+      timeout: 15000,
       headers: {
         'user-agent':
-          'Mozilla/5.0 (Linux; Android 11; RMX3261) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Mobile Safari/537.36',
-        'referer': 'https://nirob.top/down',
-        'accept': '*/*',
-        'accept-language': 'en-US,en;q=0.9'
+          'Mozilla/5.0 (Linux; Android 11) AppleWebKit/537.36 (KHTML, like Gecko) Chrome Mobile Safari/537.36',
+        'referer': 'https://nirob.top/down'
       }
     });
 
-    const data = response.data;
-
-    // 🔥 FILTER ONLY URLS
     let urls = [];
 
-    const findUrls = (obj) => {
-      if (typeof obj === 'string' && obj.startsWith('http')) {
-        urls.push(obj);
-      } else if (Array.isArray(obj)) {
-        obj.forEach(findUrls);
-      } else if (typeof obj === 'object' && obj !== null) {
-        Object.values(obj).forEach(findUrls);
+    const safeExtract = (data) => {
+      if (!data) return;
+
+      if (typeof data === 'string') {
+        if (data.startsWith('http')) urls.push(data);
+        return;
+      }
+
+      if (Array.isArray(data)) {
+        for (const item of data) safeExtract(item);
+        return;
+      }
+
+      if (typeof data === 'object') {
+        for (const key in data) safeExtract(data[key]);
       }
     };
 
-    findUrls(data);
+    safeExtract(response.data);
 
-    return res.json({
+    return res.status(200).json({
       status: 'success',
-      total_urls: urls.length,
-      urls: urls
+      total: urls.length,
+      urls
     });
 
-  } catch (error) {
+  } catch (err) {
+    console.error('API ERROR:', err.message);
+
     return res.status(500).json({
       status: 'error',
-      message: 'API failed',
-      error: error.message
+      message: 'Serverless function crashed',
+      error: err.message
     });
   }
 };
